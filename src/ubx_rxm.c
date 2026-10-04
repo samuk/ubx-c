@@ -246,7 +246,7 @@ ubx_rxm_decode_result_t ubx_rxm_sfrbx_word_decode(const ubx_frame_t *frame,
 												  uint16_t word_index,
 												  uint32_t *output){
 	ubx_rxm_decode_result_t result;
-	const uint8_t *data;
+	size_t offset;
 
 	if (output == NULL){
 		return UBX_RXM_DECODE_NULL_ARGUMENT;
@@ -262,8 +262,8 @@ ubx_rxm_decode_result_t ubx_rxm_sfrbx_word_decode(const ubx_frame_t *frame,
 		return UBX_RXM_DECODE_INDEX_OUT_OF_RANGE;
 	}
 
-	data = frame->payload + UBX_RXM_SFRBX_HEADER_LENGTH + (size_t)word_index * UBX_RXM_SFRBX_WORD_LENGTH;
-	*output = ubx_read_u32_le(data);
+	offset = UBX_RXM_SFRBX_HEADER_LENGTH + ((size_t)word_index * UBX_RXM_SFRBX_WORD_LENGTH);
+	*output = ubx_read_u32_le(&frame->payload[offset]);
 
 	return UBX_RXM_DECODE_OK;
 }

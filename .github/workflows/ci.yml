@@ -192,6 +192,7 @@ jobs:
         run: >
           cmake -S . -B build-arm -G Ninja
           -DCMAKE_SYSTEM_NAME=Generic
+          -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY
           -DCMAKE_C_COMPILER=arm-none-eabi-gcc
           -DCMAKE_C_FLAGS="-mcpu=cortex-m7 -mthumb -mfloat-abi=hard -mfpu=fpv5-d16"
           -DUBX_BUILD_TESTS=OFF
