@@ -1,0 +1,43 @@
+name: Promote upstream
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+concurrency:
+  group: promote-upstream
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'upstream'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.SYNC_TOKEN }}
+
+      - name: Fast-forward main to the tested upstream branch
+        env:
+          TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          git fetch origin upstream
+          tip="$(git rev-parse origin/upstream)"
+          # The branch may only have moved by CI autofix commits (the commit CI tested).
+          if ! git merge-base --is-ancestor "$TESTED_SHA" "$tip"; then
+            echo "upstream moved past the tested commit; waiting for its own CI run."
+            exit 0
+          fi
+          bad="$(git log --format='%ae' "$TESTED_SHA..$tip" | grep -vc '^41898282+github-actions\[bot\]@users.noreply.github.com$' || true)"
+          if [ "$bad" != "0" ]; then
+            echo "Untested non-bot commits on upstream; not promoting."
+            exit 0
+          fi
+          git merge --ff-only "$tip"
+          git push origin main

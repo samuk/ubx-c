@@ -1,0 +1,50 @@
+name: Sync upstream
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_URL: https://github.com/jaredbryan881/ubx-c.git
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    steps:
+      # SYNC_TOKEN: fine-grained PAT, contents + workflows write.
+      # Pushes made with GITHUB_TOKEN don't trigger CI and can't touch
+      # .github/workflows/.
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.SYNC_TOKEN }}
+
+      - name: Merge upstream into the upstream branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream "$UPSTREAM_URL"
+          git fetch upstream main
+          if git merge-base --is-ancestor upstream/main origin/main; then
+            echo "Nothing new from upstream."
+            exit 0
+          fi
+          if git rev-parse --verify -q origin/upstream >/dev/null; then
+            git checkout -B upstream origin/upstream
+            git merge --no-edit origin/main
+          else
+            git checkout -B upstream origin/main
+          fi
+          git merge --no-edit upstream/main
+          if git rev-parse --verify -q origin/upstream >/dev/null &&
+             [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/upstream)" ]; then
+            echo "upstream branch unchanged; CI result already exists."
+            exit 0
+          fi
+          git push origin upstream
