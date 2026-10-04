@@ -145,10 +145,7 @@ ubx_rxm_decode_result_t ubx_rxm_sfrbx_word_decode(const ubx_frame_t *frame,
 												  uint16_t word_index, 
 												  uint32_t *output);
 
-ubx_rxm_pmreq_build_result_t ubx_rxm_pmreq_build_backup(const ubx_rxm_pmreq_backup_t *request,
-														uint8_t *payload,
-														size_t capacity,
-														size_t *payload_length);
+
 
 #ifdef __cplusplus
 }
