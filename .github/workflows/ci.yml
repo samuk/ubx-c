@@ -174,7 +174,7 @@ jobs:
       - name: Run fuzzer for 60s
         run: ./build/fuzz/fuzz_parser -max_total_time=60
 
-arm-none-eabi-check:
+  arm-none-eabi-check:
     needs: autofix
     if: ${{ !cancelled() && needs.autofix.result != 'failure' }}
     runs-on: ubuntu-24.04
